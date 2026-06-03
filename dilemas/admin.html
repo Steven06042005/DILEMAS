@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administrador | Dilemas ESAN</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="page-shell page-admin">
+  <div class="app-shell">
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">Panel administrador</span>
+        <h1>Dilemas ESAN</h1>
+      </div>
+      <a class="button button-secondary" href="index.html">Volver al inicio</a>
+    </header>
+    <main class="admin-layout">
+      <section class="panel glass-panel">
+        <div class="panel-header">
+          <h2>Inicio de sesión seguro</h2>
+          <p>Acceso exclusivo para el docente.</p>
+        </div>
+        <form id="loginForm" class="form-grid">
+          <div class="field-group">
+            <label for="adminUser">Usuario</label>
+            <input id="adminUser" name="adminUser" type="text" placeholder="Steven" required />
+          </div>
+          <div class="field-group">
+            <label for="adminPassword">Contraseña</label>
+            <input id="adminPassword" name="adminPassword" type="password" placeholder="1234" required />
+          </div>
+          <button class="button button-primary" type="submit">Ingresar</button>
+        </form>
+        <div id="loginMessage" class="message message-info">Utiliza usuario <strong>Steven</strong> y contraseña <strong>1234</strong>.</div>
+      </section>
+      <section id="adminPanel" class="admin-panel hidden">
+        <div class="panel-header">
+          <div>
+            <span class="eyebrow">Administrador</span>
+            <h2>Gestión de casos</h2>
+          </div>
+          <button id="newCaseButton" class="button button-primary">Crear nuevo caso</button>
+        </div>
+        <div class="panel-body">
+          <div class="list-panel">
+            <div class="list-header">
+              <h3>Casos disponibles</h3>
+              <button id="refreshCases" class="button button-secondary">Refrescar</button>
+            </div>
+            <div id="connectionStatus" class="message message-info">Verificando conexión con Supabase...</div>
+            <div id="caseList" class="case-list"></div>
+          </div>
+          <div class="editor-panel glass-panel" id="caseEditorShell">
+            <h3 id="editorTitle">Nuevo caso</h3>
+            <form id="caseForm" class="form-grid">
+              <div class="field-group wide">
+                <label for="caseTitle">Título del caso</label>
+                <input id="caseTitle" name="caseTitle" type="text" placeholder="¿Quién es el experto?" required />
+              </div>
+              <div class="field-group">
+                <label for="caseCategory">Categoría</label>
+                <input id="caseCategory" name="caseCategory" type="text" placeholder="Ética / IA / Consultoría" required />
+              </div>
+              <div class="field-group">
+                <label for="caseBrief">Descripción breve</label>
+                <textarea id="caseBrief" name="caseBrief" rows="2" placeholder="Resumen corto del dilema"></textarea>
+              </div>
+              <div class="field-group wide">
+                <label for="caseIntro">Introducción</label>
+                <textarea id="caseIntro" name="caseIntro" rows="4" placeholder="Contexto y personajes involucrados"></textarea>
+              </div>
+              <div class="field-group wide">
+                <label for="caseDilemma">Dilema principal</label>
+                <textarea id="caseDilemma" name="caseDilemma" rows="4" placeholder="Pregunta central del caso"></textarea>
+              </div>
+              <div class="field-group">
+                <label for="caseImage">URL Imagen opcional</label>
+                <input id="caseImage" name="caseImage" type="url" placeholder="https://..." />
+              </div>
+              <div class="field-group">
+                <label for="caseAnimation">URL animación Lottie</label>
+                <input id="caseAnimation" name="caseAnimation" type="url" placeholder="https://...json" />
+              </div>
+              <div class="field-group wide">
+                <label for="caseReflection">Reflexión final</label>
+                <textarea id="caseReflection" name="caseReflection" rows="3" placeholder="Recomendación académica y preguntas de debate"></textarea>
+              </div>
+              <div class="field-group wide">
+                <label for="caseBibliography">Bibliografía opcional</label>
+                <textarea id="caseBibliography" name="caseBibliography" rows="2" placeholder="Fuentes y lecturas recomendadas"></textarea>
+              </div>
+              <div class="field-group full">
+                <label>Decisiones y resultados</label>
+                <div id="decisionBlocks" class="decision-blocks"></div>
+                <button id="addDecision" type="button" class="button button-secondary">Agregar decisión</button>
+              </div>
+              <div class="form-actions">
+                <button id="saveCase" class="button button-primary" type="submit">Guardar caso</button>
+                <button id="cancelEdit" class="button button-tertiary" type="button">Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="services/supabase.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

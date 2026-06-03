@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Estudiante | Dilemas ESAN</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="page-shell page-student">
+  <div class="app-shell">
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">Ingreso de estudiantes</span>
+        <h1>Únete a la sala</h1>
+      </div>
+      <a class="button button-secondary" href="index.html">Volver al inicio</a>
+    </header>
+    <main class="student-layout">
+      <section class="panel glass-panel join-panel" id="joinShell">
+        <div class="panel-header">
+          <h2>Regístrate para entrar</h2>
+          <p>Ingresa tu nombre y el código de sala para participar.</p>
+        </div>
+        <form id="joinForm" class="form-grid">
+          <div class="field-group">
+            <label for="studentName">Nombre</label>
+            <input id="studentName" type="text" placeholder="Tu nombre" required />
+          </div>
+          <div class="field-group">
+            <label for="studentCode">Código de sala</label>
+            <input id="studentCode" type="text" placeholder="ABC123" required />
+          </div>
+          <div class="field-group">
+            <label for="studentId">Código universitario (opcional)</label>
+            <input id="studentId" type="text" placeholder="20123456" />
+          </div>
+          <button class="button button-primary" type="submit">Entrar a la sala</button>
+        </form>
+      </section>
+      <section class="panel glass-panel student-panel hidden" id="studentShell">
+        <div class="panel-header">
+          <div>
+            <span class="eyebrow">Sala activa</span>
+            <h2 id="studentRoomTitle">Sala</h2>
+          </div>
+          <div class="status-chip" id="studentStatus">Esperando al docente</div>
+        </div>
+        <div class="student-state" id="studentState"></div>
+        <div id="studentContent" class="student-content"></div>
+        <div id="resultsCard" class="results-card hidden"></div>
+        <div id="reflectionCard" class="reflection-card hidden"></div>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lottie-web/build/player/lottie.min.js"></script>
+  <script src="services/supabase.js"></script>
+  <script src="assets/js/student.js"></script>
+</body>
+</html>
