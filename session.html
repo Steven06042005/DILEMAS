@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sesión en vivo | Dilemas ESAN</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="page-shell page-session">
+  <div class="app-shell">
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">Sala en vivo</span>
+        <h1>Control de sesión</h1>
+      </div>
+      <a class="button button-secondary" href="index.html">Volver al inicio</a>
+    </header>
+    <main class="session-layout">
+      <section class="panel glass-panel session-panel">
+        <div class="panel-header">
+          <div>
+            <h2>Genera tu sala</h2>
+            <p>Selecciona un caso y comparte el QR con tus estudiantes.</p>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label for="sessionTeacher">Profesor</label>
+            <input id="sessionTeacher" type="text" placeholder="Steven" value="Steven" />
+          </div>
+          <div class="field-group">
+            <label for="sessionCase">Seleccionar caso</label>
+            <select id="sessionCase"></select>
+          </div>
+          <div class="control-row">
+            <button id="startSessionBtn" class="button button-primary">Empezar sesión</button>
+            <button id="endSessionBtn" class="button button-tertiary" disabled>Finalizar sesión</button>
+          </div>
+        </div>
+        <div id="sessionStatus" class="status-panel">
+          <div class="status-block">
+            <span>Sala</span>
+            <strong id="sessionCode">---</strong>
+          </div>
+          <div class="status-block">
+            <span>Estudiantes</span>
+            <strong id="participantCount">0</strong>
+          </div>
+          <div class="status-block">
+            <span>Estado</span>
+            <strong id="sessionState">Inactiva</strong>
+          </div>
+        </div>
+      </section>
+      <section class="panel glass-panel session-panel">
+        <div class="panel-header">
+          <h2>QR de sala</h2>
+          <p>Comparte esta dirección con el aula para un ingreso inmediato.</p>
+        </div>
+        <div class="qr-shell">
+          <canvas id="qrCanvas"></canvas>
+          <a class="qr-link" id="sessionLink" href="student.html">Genera una sala para crear el enlace</a>
+          <button id="copySessionLink" class="button button-secondary" type="button" disabled>Copiar enlace</button>
+        </div>
+      </section>
+      <section class="panel glass-panel session-panel">
+        <div class="panel-header">
+          <h2>Control de avance</h2>
+        </div>
+        <div class="button-grid">
+          <button id="showCaseBtn" class="button button-secondary" disabled>Mostrar caso</button>
+          <button id="showDilemmaBtn" class="button button-secondary" disabled>Mostrar dilema</button>
+          <button id="showResultsBtn" class="button button-secondary" disabled>Mostrar resultados</button>
+          <button id="showReflectionBtn" class="button button-secondary" disabled>Mostrar reflexión</button>
+        </div>
+      </section>
+      <section class="panel glass-panel session-panel">
+        <div class="panel-header">
+          <h2>Participantes</h2>
+          <button id="exportCsv" class="button button-secondary">Exportar CSV</button>
+        </div>
+        <div id="participantList" class="participant-list"></div>
+      </section>
+    </main>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script src="services/supabase.js"></script>
+  <script src="assets/js/session.js"></script>
+</body>
+</html>
