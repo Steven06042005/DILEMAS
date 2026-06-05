@@ -13,11 +13,19 @@ const sessionLink = document.getElementById("sessionLink");
 const copySessionLink = document.getElementById("copySessionLink");
 const participantList = document.getElementById("participantList");
 const qrCanvas = document.getElementById("qrCanvas");
+const voteStatsSummary = document.getElementById("voteStatsSummary");
+const voteStatsList = document.getElementById("voteStatsList");
 
 let currentSession = null;
+let availableCases = [];
+let currentCase = null;
 let participants = [];
+let votes = [];
 let sessionSubscription = null;
 let participantsSubscription = null;
+let participantsRefreshTimer = null;
+let votesSubscription = null;
+let votesRefreshTimer = null;
 
 function formatUrl(code) {
   const pageDirectory = new URL(".", window.location.href);
@@ -28,15 +36,18 @@ function formatUrl(code) {
 
 async function loadCasesToPicker() {
   const cases = await fetchCases();
-  sessionCaseSelect.innerHTML = cases.length
-    ? cases.map(caso => `<option value="${caso.id}">${caso.title}</option>`).join("")
+  availableCases = cases;
+  sessionCaseSelect.innerHTML = availableCases.length
+    ? availableCases.map(caso => `<option value="${caso.id}">${caso.title}</option>`).join("")
     : `<option value="">No hay casos disponibles</option>`;
-  startSessionBtn.disabled = cases.length === 0;
+  startSessionBtn.disabled = availableCases.length === 0;
+  currentCase = availableCases.find(caso => caso.id === sessionCaseSelect.value) || null;
+  renderVoteStats();
 }
 
 function renderParticipants() {
   participantCount.textContent = participants.length.toString();
-  participantList.innerHTML = participants.map(participant => `
+  participantList.innerHTML = participants.length ? participants.map(participant => `
     <article class="participant-item">
       <div>
         <strong>${participant.name}</strong>
@@ -44,7 +55,47 @@ function renderParticipants() {
       </div>
       <span>${participant.connected ? "Conectado" : "Desconectado"}</span>
     </article>
-  `).join("");
+  `).join("") : `<div class="message message-info">Aun no hay estudiantes en la lista de espera.</div>`;
+}
+
+function getLatestVotesByParticipant() {
+  const latestVotes = new Map();
+  votes.forEach(vote => {
+    if (vote.participant_id) {
+      latestVotes.set(vote.participant_id, vote);
+    }
+  });
+  return Array.from(latestVotes.values());
+}
+
+function renderVoteStats() {
+  if (!voteStatsSummary || !voteStatsList) return;
+
+  const decisions = currentCase?.decisions || [];
+  const latestVotes = getLatestVotesByParticipant();
+  const total = latestVotes.length;
+  voteStatsSummary.textContent = `${total} voto${total === 1 ? "" : "s"}`;
+
+  if (!decisions.length) {
+    voteStatsList.innerHTML = `<div class="message message-info">Selecciona un caso para ver sus opciones de decisión.</div>`;
+    return;
+  }
+
+  voteStatsList.innerHTML = decisions.map(decision => {
+    const count = latestVotes.filter(vote => vote.option_key === decision.key).length;
+    const percent = total ? Math.round((count / total) * 100) : 0;
+
+    return `
+      <article class="stats-item">
+        <div class="result-summary">
+          <span><strong>${decision.key})</strong> ${decision.label}</span>
+          <strong>${percent}%</strong>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width: ${percent}%"></div></div>
+        <span>${count} voto${count === 1 ? "" : "s"}</span>
+      </article>
+    `;
+  }).join("");
 }
 
 function updateControlState() {
@@ -74,6 +125,9 @@ async function createRoom() {
   const roomUrl = formatUrl(code);
 
   try {
+    currentCase = availableCases.find(caso => caso.id === selectedCaseId) || null;
+    votes = [];
+    renderVoteStats();
     currentSession = await createSession(code, selectedCaseId, teacher);
     sessionCode.textContent = code;
     sessionLink.textContent = roomUrl;
@@ -100,10 +154,19 @@ function generateQr(url) {
 
 function subscribeRoom(roomId) {
   if (sessionSubscription) {
-    supabase.removeChannel(sessionSubscription);
+    supabaseClient.removeChannel(sessionSubscription);
   }
   if (participantsSubscription) {
-    supabase.removeChannel(participantsSubscription);
+    supabaseClient.removeChannel(participantsSubscription);
+  }
+  if (votesSubscription) {
+    supabaseClient.removeChannel(votesSubscription);
+  }
+  if (participantsRefreshTimer) {
+    clearInterval(participantsRefreshTimer);
+  }
+  if (votesRefreshTimer) {
+    clearInterval(votesRefreshTimer);
   }
 
   sessionSubscription = subscribeSession(roomId, updated => {
@@ -111,15 +174,22 @@ function subscribeRoom(roomId) {
     sessionState.textContent = capitalize(updated.current_step);
   });
 
-  participantsSubscription = subscribeParticipants(roomId, async () => {
+  const refreshParticipants = async () => {
     participants = await fetchParticipants(roomId);
     renderParticipants();
-  });
+  };
 
-  fetchParticipants(roomId).then(data => {
-    participants = data;
-    renderParticipants();
-  });
+  const refreshVotes = async () => {
+    votes = await fetchVotes(roomId);
+    renderVoteStats();
+  };
+
+  participantsSubscription = subscribeParticipants(roomId, refreshParticipants);
+  votesSubscription = subscribeVotes(roomId, refreshVotes);
+  refreshParticipants();
+  refreshVotes();
+  participantsRefreshTimer = setInterval(refreshParticipants, 5000);
+  votesRefreshTimer = setInterval(refreshVotes, 5000);
 }
 
 async function updateSessionStep(step) {
@@ -127,6 +197,8 @@ async function updateSessionStep(step) {
   const updated = await updateSession(currentSession.room_id, { current_step: step, state: step });
   currentSession = updated;
   sessionState.textContent = capitalize(step);
+  votes = await fetchVotes(currentSession.room_id);
+  renderVoteStats();
 }
 
 startSessionBtn.addEventListener("click", async () => {
@@ -141,6 +213,14 @@ endSessionBtn.addEventListener("click", async () => {
   sessionState.textContent = "Finalizada";
   startSessionBtn.disabled = false;
   endSessionBtn.disabled = true;
+  if (participantsRefreshTimer) {
+    clearInterval(participantsRefreshTimer);
+    participantsRefreshTimer = null;
+  }
+  if (votesRefreshTimer) {
+    clearInterval(votesRefreshTimer);
+    votesRefreshTimer = null;
+  }
 });
 
 showCaseBtn.addEventListener("click", () => updateSessionStep("case"));
@@ -175,6 +255,12 @@ async function exportCsv() {
 }
 
 document.getElementById("exportCsv").addEventListener("click", exportCsv);
+
+sessionCaseSelect.addEventListener("change", () => {
+  currentCase = availableCases.find(caso => caso.id === sessionCaseSelect.value) || null;
+  votes = [];
+  renderVoteStats();
+});
 
 copySessionLink.addEventListener("click", async () => {
   if (!currentSession || !sessionLink.href) return;

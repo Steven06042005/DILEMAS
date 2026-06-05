@@ -1,20 +1,20 @@
 /* Dilemas ESAN - Diseño profesional para Vicerrectorado Académico */
 :root {
-  --bg: #ffffff;
-  --bg-soft: #f8f8f8;
+  --bg: #fbfaf6;
+  --bg-soft: #f4f7f2;
   --panel: #ffffff;
-  --surface: #f5f5f5;
-  --text: #1a1a1a;
-  --text-light: #4a4a4a;
-  --muted: #7a7a7a;
-  --accent: #8B0000;
-  --accent-dark: #6B0000;
-  --accent-light: #C41E3A;
-  --border: #d8d8d8;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --surface: #eef3ea;
+  --text: #243126;
+  --text-light: #4d5f52;
+  --muted: #708171;
+  --accent: #7b1f27;
+  --accent-dark: #5b161c;
+  --accent-light: #2f6f5e;
+  --border: #ccd8c8;
+  --shadow: 0 1px 0 rgba(36, 49, 38, 0.08);
+  --shadow-lg: 0 8px 20px rgba(36, 49, 38, 0.10);
   --radius: 8px;
-  --radius-lg: 12px;
+  --radius-lg: 8px;
   font-family: 'Segoe UI', 'Helvetica Neue', system-ui, sans-serif;
 }
 
@@ -25,7 +25,11 @@
 html, body {
   min-height: 100%;
   margin: 0;
-  background: #ffffff;
+  background:
+    linear-gradient(rgba(47, 111, 94, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(47, 111, 94, 0.035) 1px, transparent 1px),
+    var(--bg);
+  background-size: 32px 32px;
   color: var(--text);
   line-height: 1.6;
 }
@@ -52,7 +56,7 @@ button {
   gap: 32px;
   margin-bottom: 48px;
   padding-bottom: 32px;
-  border-bottom: 3px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
 }
 
 .page-header > div {
@@ -126,7 +130,7 @@ p {
 }
 
 .button:hover {
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .button-primary {
@@ -137,7 +141,7 @@ p {
 
 .button-primary:hover {
   background: var(--accent-dark);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow);
 }
 
 .button-secondary {
@@ -178,7 +182,7 @@ p {
 .mini-card {
   background: var(--panel);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-radius: var(--radius-lg);
   padding: 32px;
   display: flex;
@@ -193,7 +197,7 @@ p {
 .glass-panel, .panel {
   background: var(--panel);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  box-shadow: none;
   border-radius: var(--radius-lg);
   padding: 32px;
 }
@@ -219,27 +223,28 @@ p {
 
 .hero-card {
   padding: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
-  color: #ffffff;
+  border-radius: var(--radius-lg);
+  background: #f7fbf4;
+  color: var(--text);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
 }
 
 .hero-card h2 {
-  color: #ffffff;
+  color: var(--text);
   margin-bottom: 16px;
 }
 
 .hero-card p {
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--text-light);
 }
 
 .hero-card__badge {
   display: inline-block;
   padding: 8px 16px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background: #e6eee2;
+  color: var(--accent-dark);
   font-size: 0.8rem;
   font-weight: 700;
   margin-bottom: 16px;
@@ -256,13 +261,13 @@ p {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #ffffff;
+  color: var(--text-light);
 }
 
 .feature-list li:before {
   content: '✓';
   font-weight: 800;
-  color: #ffffff;
+  color: var(--accent-light);
 }
 
 .info-panel {
@@ -594,6 +599,8 @@ p {
 .vote-card {
   display: grid;
   gap: 24px;
+  border-left: 4px solid var(--accent-light);
+  padding-left: 20px;
 }
 
 .vote-option {
@@ -601,8 +608,8 @@ p {
   gap: 10px;
   padding: 20px;
   border-radius: var(--radius-lg);
-  border: 2px solid var(--border);
-  background: var(--bg);
+  border: 1.5px solid var(--border);
+  background: #ffffff;
   transition: all 0.2s ease;
   cursor: pointer;
 }
@@ -610,8 +617,13 @@ p {
 .vote-option:hover {
   border-color: var(--accent);
   background: var(--surface);
-  transform: translateY(-2px);
   box-shadow: var(--shadow);
+}
+
+.vote-option.selected {
+  border-color: var(--accent-light);
+  background: #f0f7f2;
+  box-shadow: inset 4px 0 0 var(--accent-light);
 }
 
 .vote-option button {
@@ -624,6 +636,11 @@ p {
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
+}
+
+.vote-option button:disabled {
+  cursor: wait;
+  opacity: 0.85;
 }
 
 .vote-option button span {
@@ -639,6 +656,25 @@ p {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+}
+
+.stats-list {
+  display: grid;
+  gap: 18px;
+}
+
+.stats-item {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.stats-item > span {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .results-card h3, .reflection-card h3 {
@@ -662,7 +698,7 @@ p {
 
 .bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-light));
+  background: var(--accent-light);
   width: 0;
   transition: width 1s ease;
 }

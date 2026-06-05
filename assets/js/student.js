@@ -31,17 +31,27 @@ joinForm.addEventListener("submit", async event => {
     return;
   }
 
-  participant = await joinRoom(roomId, { name, studentCode });
-  await enterRoom();
+  try {
+    const session = await loadSession(roomId);
+    if (!session) {
+      alert("Sala no encontrada. Verifica el código.");
+      return;
+    }
+
+    currentSession = session;
+    participant = await joinRoom(roomId, { name, studentCode });
+    await enterRoom();
+  } catch (error) {
+    console.error("No se pudo entrar a la sala:", error);
+    alert("No se pudo entrar a la sala. Intenta nuevamente.");
+  }
 });
 
 async function enterRoom() {
   joinShell.classList.add("hidden");
   studentShell.classList.remove("hidden");
   studentRoomTitle.textContent = `Sala ${roomId}`;
-  studentStatus.textContent = "Conectado";
-  studentState.textContent = "Esperando instrucciones del docente...";
-  studentContent.innerHTML = "";
+  showWaitingRoom();
   resultsCard.classList.add("hidden");
   reflectionCard.classList.add("hidden");
 
@@ -50,7 +60,7 @@ async function enterRoom() {
 }
 
 function subscribeRoom(roomId) {
-  supabase
+  supabaseClient
     .channel(`student:${roomId}`)
     .on("postgres_changes", { event: "UPDATE", schema: "public", table: "sessions", filter: `room_id=eq.${roomId}` }, async payload => {
       currentSession = payload.new;
@@ -87,10 +97,25 @@ function renderCurrentStep(step) {
     showResultsView();
   } else if (step === "reflection") {
     showReflectionView();
+  } else {
+    showWaitingRoom();
   }
 }
 
+function showWaitingRoom() {
+  studentStatus.textContent = "En lista de espera";
+  studentState.textContent = "Esperando instrucciones del docente...";
+  studentContent.innerHTML = `
+    <section class="vote-card">
+      <span class="eyebrow">Lista de espera</span>
+      <h3>Ya estas dentro de la sala</h3>
+      <p>Tu registro fue enviado al profesor. Cuando inicie el caso, esta pantalla se actualizara automaticamente.</p>
+    </section>
+  `;
+}
+
 function showCaseView() {
+  studentStatus.textContent = "Conectado";
   studentContent.innerHTML = `
     <section class="vote-card">
       <span class="eyebrow">Caso</span>
@@ -126,6 +151,7 @@ function renderLottieAnimation(url) {
 }
 
 function showDilemmaView() {
+  studentStatus.textContent = "Votación abierta";
   if (voteSubmitted) {
     studentContent.innerHTML = `<p>Tu voto fue registrado. Espera los resultados.</p>`;
     return;
@@ -154,15 +180,40 @@ function showDilemmaView() {
   studentContent.querySelectorAll(".vote-option button").forEach(button => {
     button.addEventListener("click", async () => {
       const key = button.dataset.key;
-      await submitVote(roomId, participant.id, key);
-      voteSubmitted = true;
-      button.classList.add("selected");
-      studentContent.innerHTML = `<p>Voto registrado: ${key}. Gracias por participar.</p>`;
+      const selectedLabel = button.querySelector("strong")?.textContent || key;
+      const buttons = Array.from(studentContent.querySelectorAll(".vote-option button"));
+
+      buttons.forEach(option => {
+        option.disabled = true;
+        option.closest(".vote-option")?.classList.remove("selected");
+      });
+      button.closest(".vote-option")?.classList.add("selected");
+      button.textContent = "Registrando tu decisión...";
+
+      try {
+        await submitVote(roomId, participant.id, key);
+        voteSubmitted = true;
+        studentContent.innerHTML = `
+          <section class="vote-card vote-confirmation">
+            <span class="eyebrow">Decisión registrada</span>
+            <h3>${selectedLabel}</h3>
+            <p>Tu voto fue guardado correctamente. Espera a que el profesor muestre los resultados.</p>
+          </section>
+        `;
+      } catch (error) {
+        console.error("No se pudo registrar el voto:", error);
+        buttons.forEach(option => {
+          option.disabled = false;
+        });
+        showDilemmaView();
+        alert("No se pudo registrar tu decisión. Intenta nuevamente.");
+      }
     });
   });
 }
 
 async function showResultsView() {
+  studentStatus.textContent = "Resultados";
   const votes = await fetchVotes(roomId);
   const counts = currentCase.decisions.map(decision => ({
     ...decision,
@@ -187,6 +238,7 @@ async function showResultsView() {
 }
 
 function showReflectionView() {
+  studentStatus.textContent = "Reflexión final";
   reflectionCard.innerHTML = `
     <h3>Reflexión final</h3>
     <p>${currentCase.reflection || "Analiza las consecuencias de cada decisión y genera preguntas para el debate."}</p>

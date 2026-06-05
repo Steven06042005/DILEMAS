@@ -97,14 +97,14 @@ async function updateSession(roomId, updates) {
 async function joinRoom(roomId, student) {
   const { data, error } = await supabaseClient
     .from("participants")
-    .upsert([
+    .insert([
       {
         room_id: roomId,
         name: student.name,
         student_code: student.studentCode || null,
         connected: true,
       },
-    ], { onConflict: ["room_id", "name"] })
+    ])
     .select();
 
   if (error) {
@@ -115,19 +115,23 @@ async function joinRoom(roomId, student) {
 }
 
 async function submitVote(roomId, participantId, optionKey) {
-  const { data, error } = await supabaseClient.from("votes").insert([
-    {
-      room_id: roomId,
-      participant_id: participantId,
-      option_key: optionKey,
-    },
-  ]);
+  const { data, error } = await supabaseClient
+    .from("votes")
+    .insert([
+      {
+        room_id: roomId,
+        participant_id: participantId,
+        option_key: optionKey,
+      },
+    ])
+    .select()
+    .single();
 
   if (error) {
     console.error("Supabase submitVote error:", error);
     throw error;
   }
-  return data[0];
+  return data;
 }
 
 async function fetchParticipants(roomId) {
@@ -145,7 +149,11 @@ async function fetchParticipants(roomId) {
 }
 
 async function fetchVotes(roomId) {
-  const { data, error } = await supabaseClient.from("votes").select("*").eq("room_id", roomId);
+  const { data, error } = await supabaseClient
+    .from("votes")
+    .select("*")
+    .eq("room_id", roomId)
+    .order("created_at", { ascending: true });
   if (error) {
     console.warn("Supabase fetchVotes error:", error);
     return [];
@@ -165,7 +173,16 @@ function subscribeSession(roomId, callback) {
 function subscribeParticipants(roomId, callback) {
   return supabaseClient
     .channel(`participants:${roomId}`)
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "participants", filter: `room_id=eq.${roomId}` }, payload => {
+    .on("postgres_changes", { event: "*", schema: "public", table: "participants", filter: `room_id=eq.${roomId}` }, payload => {
+      callback(payload.new);
+    })
+    .subscribe();
+}
+
+function subscribeVotes(roomId, callback) {
+  return supabaseClient
+    .channel(`votes:${roomId}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "votes", filter: `room_id=eq.${roomId}` }, payload => {
       callback(payload.new);
     })
     .subscribe();
@@ -181,7 +198,7 @@ function normalizeCaseRecord(record) {
     dilemma: record.dilemma,
     imageUrl: record.image_url,
     animationUrl: record.animation_url,
-    decisions: record.decisions || [],
+    decisions: Array.isArray(record.decisions) ? record.decisions : JSON.parse(record.decisions || "[]"),
     reflection: record.reflection,
     bibliography: record.bibliography,
     createdAt: record.created_at,
